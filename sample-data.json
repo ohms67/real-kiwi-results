@@ -1,0 +1,23 @@
+{
+  "categories": ["Home & Property", "Health", "Money & Tax", "Cars", "Education", "Work"],
+  "results": [
+    { "id": "s1", "region": "Wellington", "category": "Home & Property", "problem": "Damp and mould in rental bedroom",
+      "solution": "Bought a dehumidifier and installed a ventilation fan", "cost": 650,
+      "outcome": "Mould stopped returning within two months", "recommend": true, "rating": 5, "date": "2026-09-12" },
+    { "id": "s2", "region": "Auckland", "category": "Home & Property", "problem": "Leaky roof in winter",
+      "solution": "Hired a local roofer to re-seal flashing", "cost": 1200,
+      "outcome": "No leaks since, though it took three weeks to book", "recommend": true, "rating": 4, "date": "2026-08-30" },
+    { "id": "s3", "region": "Canterbury", "category": "Health", "problem": "Chronic lower back pain",
+      "solution": "Weekly physio sessions plus daily stretching", "cost": 900,
+      "outcome": "Pain reduced by about 70% after three months", "recommend": true, "rating": 4, "date": "2026-09-25" },
+    { "id": "s4", "region": "Otago", "category": "Money & Tax", "problem": "Confusing tax return as a freelancer",
+      "solution": "Used an accountant for the first year", "cost": 450,
+      "outcome": "Got a refund and learned what to claim", "recommend": true, "rating": 5, "date": "2026-07-18" },
+    { "id": "s5", "region": "Waikato", "category": "Cars", "problem": "Failed WOF due to brakes",
+      "solution": "Replaced pads and rotors at an independent garage", "cost": 780,
+      "outcome": "Passed WOF; cheaper than the dealer quote", "recommend": false, "rating": 3, "date": "2026-10-02" },
+    { "id": "s6", "region": "Bay of Plenty", "category": "Work", "problem": "Stuck in an entry-level role",
+      "solution": "Completed a part-time night course in project management", "cost": 2100,
+      "outcome": "Promoted within eight months", "recommend": true, "rating": 4, "date": "2026-06-05" }
+  ]
+}
