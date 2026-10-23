@@ -5,9 +5,10 @@
    ===================================================== */
 
 /* ---------- 1. CONSTANTS ---------- */
-// The ten regions shown in dropdowns
-const REGIONS = ["Northland", "Auckland", "Waikato", "Bay of Plenty", "Taranaki",
-                 "Hawke's Bay", "Wellington", "Canterbury", "Otago", "Southland"];
+// All 16 official New Zealand regions shown in dropdowns, north to south
+const REGIONS = ["Northland", "Auckland", "Waikato", "Bay of Plenty", "Gisborne (Tairāwhiti)",
+                 "Hawke's Bay", "Taranaki", "Manawatū-Whanganui", "Wellington", "Tasman",
+                 "Nelson", "Marlborough", "West Coast", "Canterbury", "Otago", "Southland"];
 
 // Key used to store user-submitted results in the browser
 const STORAGE_KEY = "rkr-user-results";
@@ -73,7 +74,9 @@ function fillRegionSelect(select, includeAll) {
   select.innerHTML = "";
   if (includeAll) select.innerHTML = '<option value="">All regions</option>';
   REGIONS.forEach((r) => {
-    select.innerHTML += `<option value="${r}">${r}</option>`;
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = r;
+    select.appendChild(opt);
   });
 }
 
