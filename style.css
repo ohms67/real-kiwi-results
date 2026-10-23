@@ -116,6 +116,7 @@ fieldset label { display: inline-block; margin-right: 1rem; }
   main { padding: 1rem .9rem; }
   .panel { padding: 1rem; }
   .region-picker, .region-picker select { width: 100%; }
+  .region-grid { grid-template-columns: 1fr; }
   .card-list { grid-template-columns: 1fr; }
   .stat strong { font-size: 1.4rem; }
   .search-form .btn { width: 100%; }
