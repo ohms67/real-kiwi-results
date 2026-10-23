@@ -3,36 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Real Kiwi Results</title>
+  <meta name="description" content="Real Kiwi Results: what actually worked for real New Zealanders, by region.">
+  <title>Real Kiwi Results · Community insights across Aotearoa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
-    <a href="#" class="logo" data-nav="home">🥝 Real Kiwi Results</a>
-    <button class="btn" data-nav="submit">Share a result</button>
+    <div class="header-inner">
+      <a href="#" class="logo" data-nav="home"><span class="logo-mark">🥝</span> Real Kiwi Results</a>
+      <span class="trust-pill">🇳🇿 Kiwi-built · Community-powered</span>
+      <button class="btn btn-primary" data-nav="submit">Share a result</button>
+    </div>
   </header>
 
+  <!-- Selected region banner (visible on every screen) -->
+  <section class="region-banner" aria-live="polite">
+    <div class="banner-inner">
+      <div>
+        <p class="eyebrow">Your region</p>
+        <h1 id="banner-title">Waikato</h1>
+        <p id="banner-sub" class="banner-sub"></p>
+      </div>
+      <label class="region-picker">
+        <span>Switch region</span>
+        <select id="banner-region" aria-label="Selected region"></select>
+      </label>
+    </div>
+  </section>
+
   <main>
-    <!-- Home -->
+    <!-- Home / dashboard -->
     <section id="screen-home" class="screen">
-      <h1>What worked for real Kiwis?</h1>
       <form id="search-form" class="search-form">
-        <input id="search-input" type="text" placeholder="Search a problem, e.g. damp, tax, back pain">
-        <select id="home-region" aria-label="Region"></select>
-        <button class="btn" type="submit">Search</button>
+        <input id="search-input" type="search" placeholder="Search a problem, e.g. damp, tax, back pain" aria-label="Search">
+        <button class="btn btn-primary" type="submit">Search <span id="search-scope"></span></button>
       </form>
-      <h2>Browse by category</h2>
-      <div id="category-list" class="category-list"></div>
-      <h2>Recent results</h2>
-      <div id="recent-list" class="card-list"></div>
+
+      <div id="region-stats" class="stat-grid"></div>
+
+      <div class="panel" id="waikato-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Spotlight</p>
+            <h2>Waikato insights</h2>
+          </div>
+          <button class="btn btn-ghost" id="waikato-switch" type="button">View Waikato</button>
+        </div>
+        <div id="waikato-content" class="insight-grid"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Community favourites</p>
+            <h2>Most recommended solutions by region</h2>
+          </div>
+        </div>
+        <div id="top-by-region" class="region-grid"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Browse by category</h2></div>
+        <div id="category-list" class="category-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 id="recent-title">Recent results</h2></div>
+        <div id="recent-list" class="card-list"></div>
+      </div>
     </section>
 
     <!-- Results -->
     <section id="screen-results" class="screen hidden">
-      <button class="link" data-nav="home">← Home</button>
+      <button class="link" data-nav="home">← Dashboard</button>
       <h2 id="results-title"></h2>
-      <label>Region <select id="results-region"></select></label>
-      <div id="results-summary" class="summary"></div>
+      <div id="results-summary" class="stat-grid"></div>
       <div id="results-list" class="card-list"></div>
     </section>
 
@@ -44,24 +92,32 @@
 
     <!-- Submit -->
     <section id="screen-submit" class="screen hidden">
-      <h2>Share your result</h2>
-      <form id="submit-form" class="form">
-        <label>Region <select id="f-region" required></select></label>
-        <label>Category <select id="f-category" required></select></label>
-        <label>Problem <input id="f-problem" type="text" required></label>
-        <label>Solution taken <textarea id="f-solution" rows="3" required></textarea></label>
-        <label>Cost (NZD) <input id="f-cost" type="number" min="0" step="1" required></label>
-        <label>Result achieved <textarea id="f-outcome" rows="3" required></textarea></label>
-        <fieldset>
-          <legend>Would you recommend it?</legend>
-          <label><input type="radio" name="recommend" value="yes" checked> Yes</label>
-          <label><input type="radio" name="recommend" value="no"> No</label>
-        </fieldset>
-        <label>Rating (1-5) <input id="f-rating" type="number" min="1" max="5" value="5" required></label>
-        <button class="btn" type="submit">Submit</button>
-      </form>
+      <div class="panel">
+        <h2>Share your result</h2>
+        <p class="muted">Help your neighbours: tell us what worked (and what didn't).</p>
+        <form id="submit-form" class="form">
+          <label>Region <select id="f-region" required></select></label>
+          <label>Category <select id="f-category" required></select></label>
+          <label>Problem <input id="f-problem" type="text" required></label>
+          <label>Solution taken <textarea id="f-solution" rows="3" required></textarea></label>
+          <label>Cost (NZD) <input id="f-cost" type="number" min="0" step="1" required></label>
+          <label>Result achieved <textarea id="f-outcome" rows="3" required></textarea></label>
+          <fieldset>
+            <legend>Would you recommend it?</legend>
+            <label><input type="radio" name="recommend" value="yes" checked> Yes</label>
+            <label><input type="radio" name="recommend" value="no"> No</label>
+          </fieldset>
+          <label>Rating (1-5) <input id="f-rating" type="number" min="1" max="5" value="5" required></label>
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+      </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <p>🥝 Real Kiwi Results · Honest experiences from real New Zealanders, from Northland to Southland.</p>
+    <p class="muted">Community-shared and not professional advice. Prices in NZD.</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
