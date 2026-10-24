@@ -13,14 +13,17 @@
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <a href="#" class="logo" data-nav="home"><span class="logo-mark">🥝</span> Real Kiwi Results</a>
-      <span class="trust-pill">🇳🇿 Kiwi-built · Community-powered</span>
+      <a href="#" class="logo" data-nav="insights"><span class="logo-mark">🥝</span> Real Kiwi Results</a>
+      <nav class="main-nav" aria-label="Main">
+        <a href="#" data-nav="insights" id="nav-insights">Insights</a>
+        <a href="#" data-nav="home" id="nav-home">Regions</a>
+      </nav>
       <button class="btn btn-primary" data-nav="submit">Share a result</button>
     </div>
   </header>
 
   <!-- Selected region banner (visible on every screen) -->
-  <section class="region-banner" aria-live="polite">
+  <section id="region-banner" class="region-banner" aria-live="polite">
     <div class="banner-inner">
       <div>
         <p class="eyebrow">Your region</p>
@@ -35,8 +38,35 @@
   </section>
 
   <main>
+    <!-- National insights -->
+    <section id="screen-insights" class="screen">
+      <div class="insights-hero">
+        <p class="eyebrow">New Zealand Insights</p>
+        <h1>What actually works across Aotearoa</h1>
+        <p id="ins-sub" class="hero-sub"></p>
+      </div>
+      <div id="ins-kpis" class="stat-grid"></div>
+      <div class="insight-cols">
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">Outcomes</p><h2>Most successful solutions</h2></div></div>
+          <p class="muted note">Success = recommended and rated 4★ or more. Solutions with 3+ reports.</p><div id="ins-success"></div></div>
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">Confidence</p><h2>Highest recommendation rates</h2></div></div>
+          <p class="muted note">Share of contributors who would recommend, by category.</p><div id="ins-recommend"></div></div>
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">Spend</p><h2>Average cost by category</h2></div></div><div id="ins-cost-cat"></div></div>
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">Spend</p><h2>Average cost by region</h2></div></div>
+          <p class="muted note">Regions with 5+ reports. Compare with the national average line.</p><div id="ins-cost-region"></div></div>
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">Providers</p><h2>Most recommended provider categories</h2></div></div>
+          <p class="muted note">Aggregated by type only. Counts include only providers whose contributors chose to make them public.</p><div id="ins-providers"></div></div>
+        <div class="panel"><div class="panel-head"><div><p class="eyebrow">Momentum</p><h2>Top growing problems</h2></div></div>
+          <p class="muted note" id="ins-growth-note"></p><div id="ins-growth"></div></div>
+      </div>
+      <div class="panel"><div class="panel-head"><div><p class="eyebrow">Decision aid</p><h2>Best value investments</h2></div></div>
+        <p class="muted note">Cost per successful outcome = average cost ÷ success rate. Lower is better. Solutions with 3+ reports and a 70%+ success rate.</p>
+        <div id="ins-value"></div></div>
+      <p class="muted method" id="ins-method"></p>
+    </section>
+
     <!-- Home / dashboard -->
-    <section id="screen-home" class="screen">
+    <section id="screen-home" class="screen hidden">
       <form id="search-form" class="search-form">
         <input id="search-input" type="search" placeholder="Search a problem, e.g. damp, tax, back pain" aria-label="Search">
         <button class="btn btn-primary" type="submit">Search <span id="search-scope"></span></button>

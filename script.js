@@ -63,6 +63,9 @@ async function loadData() {
 
 /* ---------- 5. SWITCHING SCREENS ---------- */
 function showScreen(name) {
+  $("region-banner").classList.toggle("hidden", name === "insights");
+  $("nav-insights").classList.toggle("active", name === "insights");
+  $("nav-home").classList.toggle("active", name === "home");
   // Hide all screens first...
   document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
   // ...then show the one we want
@@ -231,6 +234,95 @@ function renderHome() {
     : "<p class='muted'>Nothing here yet. Be the first to share one!</p>";
 }
 
+/* ---------- 8c. NATIONAL INSIGHTS ---------- */
+const MIN_N = 3; // minimum reports before a group is ranked
+const isSuccess = (r) => r.recommend && r.rating >= 4;
+const avgOf = (list, f) => list.reduce((s, r) => s + f(r), 0) / list.length;
+const pctOf = (list, f) => Math.round(list.filter(f).length / list.length * 100);
+
+function groupBy(list, keyFn) {
+  const g = {};
+  list.forEach((r) => { const k = keyFn(r); if (k) (g[k] = g[k] || []).push(r); });
+  return Object.entries(g).map(([key, items]) => ({ key, items }));
+}
+
+// Horizontal bar list. rows: [{label, value, text, sub}]
+function barsHTML(rows, opts = {}) {
+  if (!rows.length) return "<p class='muted'>Not enough data yet.</p>";
+  const max = Math.max(...rows.map((r) => r.value), 1);
+  const ref = opts.ref ? `<span class="ref-line" style="left:${Math.min(opts.ref / max * 100, 100)}%" title="${opts.refLabel}"></span>` : "";
+  return `<ol class="ibars">${rows.map((r, i) => `<li>
+    <span class="ib-rank">${i + 1}</span>
+    <div class="ib-main"><div class="ib-top"><span class="ib-label">${escapeHTML(r.label)}</span><strong>${r.text}</strong></div>
+      <div class="ib-track"><div class="ib-fill" style="width:${Math.max(r.value / max * 100, 2)}%"></div>${ref}</div>
+      ${r.sub ? `<span class="ib-sub">${r.sub}</span>` : ""}</div></li>`).join("")}</ol>
+    ${opts.ref ? `<p class="muted legend"><span class="ref-key"></span>${opts.refLabel}</p>` : ""}`;
+}
+
+function renderInsights() {
+  const all = allResults;
+  if (!all.length) { $("ins-sub").textContent = "No data yet."; return; }
+  const nat = { n: all.length, cost: avgOf(all, (r) => r.cost), rec: pctOf(all, (r) => r.recommend), succ: pctOf(all, isSuccess) };
+  const latest = all.map((r) => r.date).sort().pop();
+  const regions = new Set(all.map((r) => r.region)).size;
+  $("ins-sub").textContent = `Aggregated from ${nat.n.toLocaleString("en-NZ")} community-reported outcomes across ${regions} regions. Use it to see what tends to work, what it costs, and where to start.`;
+  $("ins-kpis").innerHTML = [
+    ["📊", nat.n.toLocaleString("en-NZ"), "reported outcomes"],
+    ["✅", nat.succ + "%", "successful outcomes"],
+    ["👍", nat.rec + "%", "would recommend"],
+    ["💵", money(nat.cost), "average cost"]
+  ].map(([i, v, l]) => `<div class="stat"><span class="stat-icon">${i}</span><strong>${v}</strong><span class="stat-label">${l}</span></div>`).join("");
+
+  const confidence = (n) => n >= 10 ? "High" : n >= 5 ? "Medium" : "Low";
+  const basis = (n) => `${n} reports · ${confidence(n)} confidence`;
+
+  // Solutions grouped by identical text
+  const sols = groupBy(all, (r) => r.solution).filter((g) => g.items.length >= MIN_N)
+    .map((g) => ({ ...g, n: g.items.length, succ: pctOf(g.items, isSuccess), cost: avgOf(g.items, (r) => r.cost), cat: g.items[0].category }));
+
+  $("ins-success").innerHTML = barsHTML(sols.sort((a, b) => b.succ - a.succ || b.n - a.n).slice(0, 6)
+    .map((s) => ({ label: s.key, value: s.succ, text: s.succ + "%", sub: `${escapeHTML(s.cat)} · ${basis(s.n)} · avg ${money(s.cost)}` })));
+
+  const cats = groupBy(all, (r) => r.category).map((g) => ({ ...g, n: g.items.length }));
+  $("ins-recommend").innerHTML = barsHTML(cats.map((g) => ({ label: g.key, rate: pctOf(g.items, (r) => r.recommend), n: g.n }))
+    .sort((a, b) => b.rate - a.rate).slice(0, 6)
+    .map((g) => ({ label: g.label, value: g.rate, text: g.rate + "%", sub: basis(g.n) })));
+
+  $("ins-cost-cat").innerHTML = barsHTML(cats.map((g) => ({ label: g.key, avg: avgOf(g.items, (r) => r.cost), n: g.n }))
+    .sort((a, b) => b.avg - a.avg).map((g) => ({ label: g.label, value: g.avg, text: money(g.avg), sub: `${g.n} reports` })),
+    { ref: nat.cost, refLabel: "National average " + money(nat.cost) });
+
+  const regs = groupBy(all, (r) => r.region).filter((g) => g.items.length >= 5);
+  $("ins-cost-region").innerHTML = barsHTML(regs.map((g) => ({ label: g.key, avg: avgOf(g.items, (r) => r.cost), n: g.items.length }))
+    .sort((a, b) => b.avg - a.avg).map((g) => ({ label: g.label, value: g.avg, text: money(g.avg), sub: `${g.n} reports` })),
+    { ref: nat.cost, refLabel: "National average " + money(nat.cost) });
+
+  const provs = groupBy(all.filter((r) => r.providerConsent === "public"), (r) => r.providerType)
+    .map((g) => ({ ...g, n: g.items.length, rec: g.items.filter((r) => r.recommend).length }))
+    .filter((g) => g.n >= MIN_N).sort((a, b) => b.rec - a.rec);
+  $("ins-providers").innerHTML = barsHTML(provs.slice(0, 6).map((g) => ({
+    label: g.key, value: g.rec, text: g.rec + " recommended",
+    sub: `${Math.round(g.rec / g.n * 100)}% of ${g.n} reports recommend · avg ${avgOf(g.items, (r) => r.rating).toFixed(1)} ★` })));
+
+  // Growth: last 90 days vs the 90 days before, relative to the newest report
+  const day = 86400000, end = new Date(latest).getTime();
+  const period = (r) => { const age = (end - new Date(r.date).getTime()) / day; return age < 90 ? "now" : age < 180 ? "prev" : null; };
+  const growth = cats.map((g) => {
+    const now = g.items.filter((r) => period(r) === "now").length, prev = g.items.filter((r) => period(r) === "prev").length;
+    return { label: g.key, now, prev, change: prev ? Math.round((now - prev) / prev * 100) : null, diff: now - prev };
+  }).filter((g) => g.now + g.prev >= 5 && g.diff > 0).sort((a, b) => b.diff - a.diff || b.now - a.now).slice(0, 6);
+  $("ins-growth-note").textContent = "Problem areas reported more often in the latest 90 days than in the 90 days before. Bar shows extra reports.";
+  $("ins-growth").innerHTML = barsHTML(growth.map((g) => ({ label: g.label, value: g.diff,
+    text: (g.change === null ? "New" : "+" + g.change + "%"), sub: `${g.prev} → ${g.now} reports` })));
+
+  const value = sols.filter((s) => s.succ >= 70)
+    .map((s) => ({ ...s, cps: s.cost / (s.succ / 100) })).sort((a, b) => a.cps - b.cps).slice(0, 6);
+  $("ins-value").innerHTML = barsHTML(value.map((s) => ({ label: s.key, value: s.cps, text: money(s.cps),
+    sub: `${escapeHTML(s.cat)} · ${s.succ}% success · avg ${money(s.cost)} · ${basis(s.n)}` })));
+
+  $("ins-method").textContent = `Based on community-submitted results up to ${latest}. Groups under ${MIN_N} reports are excluded; confidence reflects sample size. Community-shared, not professional advice.`;
+}
+
 /* ---------- 9. SEARCH RESULTS SCREEN ---------- */
 let currentQuery = "";     // the text being searched
 let currentCategory = "";  // the category being browsed (if any)
@@ -339,6 +431,7 @@ function handleSubmit(event) {
   allResults.push(newResult);
   $("submit-form").reset();
   renderHome();
+  renderInsights();
   alert("Thanks for sharing! Your result has been added.");
   showDetail(newResult.id);
 }
@@ -383,6 +476,7 @@ function setupEvents() {
     if (nav) {
       e.preventDefault();
       const target = nav.dataset.nav;
+      if (target === "insights") { renderInsights(); showScreen("insights"); }
       if (target === "home") { renderHome(); showScreen("home"); }
       if (target === "submit") { showScreen("submit"); }
       if (target === "back") { showScreen(previousScreen); }
@@ -418,7 +512,8 @@ async function init() {
   $("f-category").innerHTML = categories.map((c) => `<option>${c}</option>`).join("");
   setupEvents();
   renderHome();
-  showScreen("home");
+  renderInsights();
+  showScreen("insights");
 }
 
 init(); // run everything
