@@ -404,22 +404,143 @@ function showDetail(id) {
 }
 
 /* ---------- 11. SUBMIT FORM ---------- */
+/* A 9-step conversational wizard. Each step is a <section class="wiz-step">
+   in index.html; only the current one is visible. Progress is auto-saved
+   to localStorage so contributors can leave and pick up where they left off. */
+const WIZARD_KEY = "rkr-wizard-draft";
+const WIZ_TOTAL = 9;
+const WIZ_FIELDS = ["problem", "category", "region", "city", "solution", "cost",
+                    "outcome", "providerName", "providerType", "tip"]; // simple fields by element id suffix
+const WIZ_IDS = { problem: "f-problem", category: "f-category", region: "f-region", city: "f-city",
+  solution: "f-solution", cost: "f-cost", outcome: "f-outcome",
+  providerName: "f-provider-name", providerType: "f-provider-type", tip: "f-tip" };
+let wizStep = 1;
+
+// Per-step validation: returns an error message, or "" when the step is fine
+function validateStep(step) {
+  const val = (k) => $(WIZ_IDS[k]).value.trim();
+  switch (step) {
+    case 1: return val("problem").length < 3 ? "Tell us what you were trying to decide (a few words is fine)." : "";
+    case 2: return !val("region") ? "Please choose your region."
+                  : !val("city") ? "Please enter your city or town." : "";
+    case 3: return val("solution").length < 3 ? "Tell us briefly what you did." : "";
+    case 4: { const c = $("f-cost").value;
+              return c === "" || Number(c) < 0 || !isFinite(Number(c)) ? "Enter an approximate cost in dollars (0 if it was free)." : ""; }
+    case 5: return val("outcome").length < 3 ? "Tell us what happened afterwards." : "";
+    case 6: return !document.querySelector('input[name="rating"]:checked') ? "Pick the option that fits best." : "";
+    default: return ""; // steps 7-9 are optional
+  }
+}
+
+// Read the whole form into one plain object (also used for auto-save)
+function readWizard() {
+  const data = { step: wizStep };
+  WIZ_FIELDS.forEach((k) => { data[k] = $(WIZ_IDS[k]).value; });
+  const rating = document.querySelector('input[name="rating"]:checked');
+  data.rating = rating ? Number(rating.value) : null;
+  data.consent = document.querySelector('input[name="consent"]:checked').value;
+  return data;
+}
+
+function saveWizard() {
+  try { localStorage.setItem(WIZARD_KEY, JSON.stringify(readWizard())); } catch (e) { /* storage full/blocked: ignore */ }
+}
+
+// Put saved answers back into the form and jump to the saved step
+function restoreWizard() {
+  let data;
+  try { data = JSON.parse(localStorage.getItem(WIZARD_KEY) || "null"); } catch (e) { data = null; }
+  if (!data) return;
+  WIZ_FIELDS.forEach((k) => { if (data[k] != null) $(WIZ_IDS[k]).value = data[k]; });
+  if (data.rating) { const r = document.querySelector(`input[name="rating"][value="${data.rating}"]`); if (r) r.checked = true; }
+  const c = document.querySelector(`input[name="consent"][value="${data.consent}"]`);
+  if (c) c.checked = true;
+  wizStep = Math.min(Math.max(Number(data.step) || 1, 1), WIZ_TOTAL);
+}
+
+// Show one step, update progress, and animate the change
+function goToStep(n, direction) {
+  wizStep = n;
+  document.querySelectorAll(".wiz-step").forEach((el) => {
+    const active = Number(el.dataset.step) === n;
+    el.hidden = !active;
+    el.classList.remove("slide-fwd", "slide-back");
+    if (active) {
+      void el.offsetWidth; // restart the CSS animation
+      el.classList.add(direction === "back" ? "slide-back" : "slide-fwd");
+    }
+  });
+  const pct = Math.round(((n - 1) / WIZ_TOTAL) * 100); // % of steps already completed
+  $("wiz-step-label").textContent = `Step ${n} of ${WIZ_TOTAL}`;
+  $("wiz-percent").textContent = `${pct}%`;
+  $("wiz-bar-fill").style.width = `${pct}%`;
+  $("wiz-bar").setAttribute("aria-valuenow", pct);
+  $("wiz-back").style.visibility = n === 1 ? "hidden" : "visible";
+  $("wiz-next").textContent = n === WIZ_TOTAL ? "Submit" : (n === 7 && !$("f-provider-name").value.trim() ? "Skip" : "Next");
+  document.querySelectorAll(".wiz-error").forEach((e) => (e.textContent = ""));
+  saveWizard();
+  const heading = document.querySelector(`.wiz-step[data-step="${n}"] h2`);
+  if (direction) { window.scrollTo({ top: 0, behavior: "smooth" }); heading.focus({ preventScroll: true }); }
+}
+
+// Pick a category from the problem wording when the contributor typed their own
+function guessCategory(problem) {
+  const t = problem.toLowerCase();
+  const rules = [
+    [/damp|mould|roof|insulat|house|home|renovat|plumb|rent/, "Home & Property"],
+    [/power|electric|solar|energy|gas|heat/, "Power & Utilities"],
+    [/car|vehicle|ute|van|warrant|wof|mechanic/, "Cars"],
+    [/internet|wifi|fibre|broadband|phone|computer/, "Internet & Technology"],
+    [/insur/, "Insurance"], [/doctor|health|physio|dental|medical|gp\b/, "Health"],
+    [/course|study|school|uni|learn|degree/, "Education"],
+    [/job|career|work|employ/, "Work & Careers"], [/tax|money|loan|mortgage|saving|kiwisaver/, "Money & Tax"]
+  ];
+  const hit = rules.find(([re]) => re.test(t));
+  return hit ? hit[1] : "Lifestyle & Travel";
+}
+
+function showWizardError(msg) {
+  const el = document.querySelector(`.wiz-step[data-step="${wizStep}"] .wiz-error`);
+  el.textContent = msg;
+  const input = el.parentElement.querySelector("input:not([type=radio]), select, textarea, input[type=radio]");
+  if (input) input.focus({ preventScroll: true });
+}
+
 function handleSubmit(event) {
   event.preventDefault(); // stop the page reloading
 
+  // Validate the current step before moving on
+  const error = validateStep(wizStep);
+  if (error) { showWizardError(error); return; }
+
+  if (wizStep < WIZ_TOTAL) {
+    // Auto-pick a category the first time the problem is typed freely
+    if (wizStep === 1 && !$("f-category").dataset.touched) $("f-category").value = guessCategory($("f-problem").value);
+    goToStep(wizStep + 1, "fwd");
+    return;
+  }
+
+  // Final step: make sure earlier steps are still valid, then save
+  for (let s = 1; s < WIZ_TOTAL; s++) {
+    const e = validateStep(s);
+    if (e) { goToStep(s, "back"); showWizardError(e); return; }
+  }
+  const d = readWizard();
   const newResult = {
     id: "user-" + Date.now(),            // unique id from the current time
-    region: $("f-region").value,
-    category: $("f-category").value,
-    problem: $("f-problem").value.trim(),
-    solution: $("f-solution").value.trim(),
-    cost: Number($("f-cost").value),
-    outcome: $("f-outcome").value.trim(),
-    recommend: document.querySelector('input[name="recommend"]:checked').value === "yes",
-    rating: Number($("f-rating").value),
-    providerName: $("f-provider-name").value.trim(),
-    providerType: $("f-provider-type").value,
-    providerConsent: document.querySelector('input[name="consent"]:checked').value,
+    region: d.region,
+    city: d.city.trim(),
+    category: d.category,
+    problem: d.problem.trim(),
+    solution: d.solution.trim(),
+    cost: Number(d.cost),
+    outcome: d.outcome.trim(),
+    rating: d.rating,                     // 5 = Absolutely ... 1 = Never again
+    recommend: d.rating >= 4,             // Absolutely / Probably
+    tip: d.tip.trim(),
+    providerName: d.providerName.trim(),
+    providerType: d.providerType,
+    providerConsent: d.consent,
     date: new Date().toISOString().slice(0, 10) // e.g. "2026-10-23"
   };
 
@@ -427,13 +548,53 @@ function handleSubmit(event) {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   saved.push(newResult);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-
   allResults.push(newResult);
+
+  // Clear the draft and show the thank-you screen
+  localStorage.removeItem(WIZARD_KEY);
   $("submit-form").reset();
+  $("wizard").classList.add("is-done");
+  $("submit-form").hidden = true;
+  $("wiz-progress").hidden = true;
+  $("wiz-done").hidden = false;
+  $("wiz-done").querySelector("h2").focus();
   renderHome();
   renderInsights();
-  alert("Thanks for sharing! Your result has been added.");
-  showDetail(newResult.id);
+}
+
+// Start (or restart) the wizard whenever the screen is opened
+function openWizard() {
+  $("wizard").classList.remove("is-done");
+  $("submit-form").hidden = false;
+  $("wiz-progress").hidden = false;
+  $("wiz-done").hidden = true;
+  goToStep(wizStep);
+}
+
+function setupWizard() {
+  restoreWizard();
+  // Example chips fill in the problem and topic
+  $("problem-chips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    $("f-problem").value = chip.dataset.problem;
+    $("f-category").value = chip.dataset.category;
+    $("f-category").dataset.touched = "1";
+    document.querySelectorAll(".chip").forEach((c) => c.classList.toggle("selected", c === chip));
+    saveWizard();
+  });
+  $("f-category").addEventListener("change", () => ($("f-category").dataset.touched = "1"));
+  $("wiz-back").addEventListener("click", () => { if (wizStep > 1) goToStep(wizStep - 1, "back"); });
+  // Auto-save on every change; clear errors while typing
+  $("submit-form").addEventListener("input", () => {
+    saveWizard();
+    document.querySelectorAll(".wiz-error").forEach((e) => (e.textContent = ""));
+    if (wizStep === 7) $("wiz-next").textContent = $("f-provider-name").value.trim() ? "Next" : "Skip";
+  });
+  $("submit-form").addEventListener("change", saveWizard);
+  // Choosing an emoji answer moves things along (feels like a conversation)
+  document.querySelectorAll('input[name="rating"]').forEach((r) =>
+    r.addEventListener("change", () => setTimeout(() => { if (wizStep === 6) $("submit-form").requestSubmit(); }, 250)));
 }
 
 function setRegion(region) {
@@ -478,7 +639,7 @@ function setupEvents() {
       const target = nav.dataset.nav;
       if (target === "insights") { renderInsights(); showScreen("insights"); }
       if (target === "home") { renderHome(); showScreen("home"); }
-      if (target === "submit") { showScreen("submit"); }
+      if (target === "submit") { showScreen("submit"); openWizard(); }
       if (target === "back") { showScreen(previousScreen); }
       return;
     }
@@ -510,6 +671,7 @@ async function init() {
   $("banner-region").options[0].textContent = "All New Zealand";
   fillRegionSelect($("f-region"), false);
   $("f-category").innerHTML = categories.map((c) => `<option>${c}</option>`).join("");
+  setupWizard();
   setupEvents();
   renderHome();
   renderInsights();

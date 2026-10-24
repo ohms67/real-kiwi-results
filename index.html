@@ -132,54 +132,155 @@
 
     <!-- Submit -->
     <section id="screen-submit" class="screen hidden">
-      <div class="panel">
-        <h2>Share your result</h2>
-        <p class="muted">Help your neighbours: tell us what worked (and what didn't).</p>
-        <form id="submit-form" class="form">
-          <fieldset class="form-section">
-            <legend>About your result</legend>
-            <label>Region <select id="f-region" required></select></label>
-            <label>Category <select id="f-category" required></select></label>
-            <label>Problem <input id="f-problem" type="text" required></label>
-            <label>Solution taken <textarea id="f-solution" rows="3" required></textarea></label>
-            <label>Cost (NZD) <input id="f-cost" type="number" min="0" step="1" required></label>
-            <label>Result achieved <textarea id="f-outcome" rows="3" required></textarea></label>
-          </fieldset>
-          <fieldset class="form-section">
-            <legend>Your verdict</legend>
-            <div class="radio-row">
-              <span class="field-label">Would you recommend it?</span>
-              <label class="inline"><input type="radio" name="recommend" value="yes" checked> Yes</label>
-              <label class="inline"><input type="radio" name="recommend" value="no"> No</label>
+      <!-- Wizard: one question per screen, driven by the "WIZARD" section of script.js -->
+      <div class="wiz" id="wizard">
+        <p class="wiz-mission">Help the next Kiwi make a better decision.</p>
+
+        <!-- Progress: step indicator, percentage and bar -->
+        <div class="wiz-progress" id="wiz-progress">
+          <div class="wiz-progress-text">
+            <span id="wiz-step-label">Step 1 of 9</span>
+            <span id="wiz-percent">0%</span>
+          </div>
+          <div class="wiz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="wiz-bar">
+            <div class="wiz-bar-fill" id="wiz-bar-fill"></div>
+          </div>
+        </div>
+
+        <form id="submit-form" class="wiz-card" novalidate autocomplete="off">
+
+          <!-- Step 1: decision -->
+          <section class="wiz-step" data-step="1">
+            <h2 tabindex="-1">What decision were you trying to make?</h2>
+            <p class="wiz-hint">Real decisions, real outcomes. Tap an example or write your own.</p>
+            <div class="wiz-chips" id="problem-chips">
+              <button type="button" class="chip" data-problem="Fix a damp house" data-category="Home & Property">🏠 Fix a damp house</button>
+              <button type="button" class="chip" data-problem="Lower power bills" data-category="Power & Utilities">⚡ Lower power bills</button>
+              <button type="button" class="chip" data-problem="Buy a reliable family vehicle" data-category="Cars">🚗 Buy a reliable family vehicle</button>
+              <button type="button" class="chip" data-problem="Improve internet performance" data-category="Internet & Technology">📶 Improve internet performance</button>
             </div>
-            <label>Rating (1-5) <input id="f-rating" type="number" min="1" max="5" value="5" required></label>
-          </fieldset>
-          <fieldset class="form-section">
-            <legend>Provider information <span class="optional">Optional</span></legend>
-            <label>Provider name <input id="f-provider-name" type="text" autocomplete="off" placeholder="e.g. Smith &amp; Sons Roofing"></label>
-            <label>Provider type
-              <select id="f-provider-type">
-                <option value="">Select a type…</option>
-                <option>Tradesperson</option>
-                <option>Business / company</option>
-                <option>Health practitioner</option>
-                <option>Professional (accountant, lawyer…)</option>
-                <option>Government / council</option>
-                <option>Other</option>
-              </select>
-            </label>
-            <div class="consent" role="radiogroup" aria-labelledby="consent-title">
-              <p id="consent-title" class="field-label">How should provider information be handled?</p>
-              <label class="option"><input type="radio" name="consent" value="private" checked>
-                <span><strong>Keep private</strong><small>Only you know the provider. Nothing is shown on your result.</small></span></label>
-              <label class="option"><input type="radio" name="consent" value="public">
-                <span><strong>Show provider publicly</strong><small>The provider's name and type appear on your result for everyone to see.</small></span></label>
-              <label class="option"><input type="radio" name="consent" value="request">
-                <span><strong>Share provider only on request</strong><small>Readers see that a provider exists and can ask for details. Nothing is shown until you agree.</small></span></label>
+            <label class="wiz-label" for="f-problem">Your decision</label>
+            <input id="f-problem" name="problem" type="text" maxlength="120" required placeholder="e.g. Fix a damp house">
+            <label class="wiz-label" for="f-category">Topic</label>
+            <select id="f-category" name="category" required></select>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 2: location -->
+          <section class="wiz-step" data-step="2" hidden>
+            <h2 tabindex="-1">Where did this happen?</h2>
+            <p class="wiz-hint">Local context matters: costs and options differ across Aotearoa.</p>
+            <label class="wiz-label" for="f-region">Region</label>
+            <select id="f-region" name="region" required></select>
+            <label class="wiz-label" for="f-city">City / Town</label>
+            <input id="f-city" name="city" type="text" maxlength="60" required autocomplete="address-level2" placeholder="e.g. Hamilton">
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 3: solution -->
+          <section class="wiz-step" data-step="3" hidden>
+            <h2 tabindex="-1">What did you do?</h2>
+            <p class="wiz-hint">Describe the real action you took, in your own words.</p>
+            <label class="wiz-label" for="f-solution">Solution</label>
+            <textarea id="f-solution" name="solution" rows="4" maxlength="500" required placeholder="e.g. Installed a heat pump and a ventilation fan"></textarea>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 4: cost -->
+          <section class="wiz-step" data-step="4" hidden>
+            <h2 tabindex="-1">What did it cost?</h2>
+            <p class="wiz-hint">An approximate amount is perfectly fine.</p>
+            <label class="wiz-label" for="f-cost">Cost (NZD)</label>
+            <div class="wiz-money"><span aria-hidden="true">$</span>
+              <input id="f-cost" name="cost" type="number" inputmode="numeric" min="0" step="1" required placeholder="0"></div>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 5: outcome -->
+          <section class="wiz-step" data-step="5" hidden>
+            <h2 tabindex="-1">What happened afterwards?</h2>
+            <p class="wiz-hint">Real outcomes help others know what to expect.</p>
+            <ul class="wiz-examples">
+              <li>Saved $80 per month</li><li>House feels warmer</li><li>Got a new job</li><li>Internet speed doubled</li>
+            </ul>
+            <label class="wiz-label" for="f-outcome">Outcome</label>
+            <textarea id="f-outcome" name="outcome" rows="4" maxlength="500" required placeholder="e.g. Saved $80 per month"></textarea>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 6: would you do it again (stored as 5..1) -->
+          <section class="wiz-step" data-step="6" hidden>
+            <h2 tabindex="-1">Would you do it again?</h2>
+            <p class="wiz-hint">Honest answers build trust.</p>
+            <div class="wiz-options" role="radiogroup" aria-label="Would you do it again?">
+              <label class="wiz-option emoji"><input type="radio" name="rating" value="5"><span><b>😍</b> Absolutely</span></label>
+              <label class="wiz-option emoji"><input type="radio" name="rating" value="4"><span><b>🙂</b> Probably</span></label>
+              <label class="wiz-option emoji"><input type="radio" name="rating" value="3"><span><b>😐</b> Not sure</span></label>
+              <label class="wiz-option emoji"><input type="radio" name="rating" value="2"><span><b>🙁</b> Probably not</span></label>
+              <label class="wiz-option emoji"><input type="radio" name="rating" value="1"><span><b>😞</b> Never again</span></label>
             </div>
-          </fieldset>
-          <button class="btn btn-primary" type="submit">Submit</button>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 7: provider (optional) -->
+          <section class="wiz-step" data-step="7" hidden>
+            <h2 tabindex="-1">Who helped? <span class="optional">Optional</span></h2>
+            <p class="wiz-hint">Recommendations from real people are the most useful kind. Skip if it doesn't apply.</p>
+            <label class="wiz-label" for="f-provider-name">Provider Name</label>
+            <input id="f-provider-name" name="providerName" type="text" maxlength="100" placeholder="e.g. Smith &amp; Sons Roofing">
+            <label class="wiz-label" for="f-provider-type">Provider Type</label>
+            <select id="f-provider-type" name="providerType">
+              <option value="">Select a type…</option>
+              <option>Business / Company</option>
+              <option>Tradesperson</option>
+              <option>Professional Service</option>
+              <option>Health Practitioner</option>
+              <option>Education Provider</option>
+              <option>Other</option>
+            </select>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 8: provider visibility -->
+          <section class="wiz-step" data-step="8" hidden>
+            <h2 tabindex="-1">How should provider information be shared?</h2>
+            <p class="wiz-hint">You're in control. Pick what feels right.</p>
+            <div class="wiz-options" role="radiogroup" aria-label="Provider sharing">
+              <label class="wiz-option"><input type="radio" name="consent" value="private" checked>
+                <span><strong>🔒 Keep Private</strong><small>Only you know the provider. Nothing is shown on your result.</small></span></label>
+              <label class="wiz-option"><input type="radio" name="consent" value="public">
+                <span><strong>🌍 Show Publicly</strong><small>The provider's name and type appear on your result for everyone to see.</small></span></label>
+              <label class="wiz-option"><input type="radio" name="consent" value="request">
+                <span><strong>🤝 Share On Request</strong><small>Readers see that a provider exists and can ask for details. Nothing is shown until you agree.</small></span></label>
+            </div>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Step 9: tip -->
+          <section class="wiz-step" data-step="9" hidden>
+            <h2 tabindex="-1">What do you wish you'd known?</h2>
+            <p class="wiz-hint">Help the next Kiwi make a better decision.</p>
+            <label class="wiz-label" for="f-tip">One tip for other Kiwis <span class="optional">Optional</span></label>
+            <textarea id="f-tip" name="tip" rows="4" maxlength="300" placeholder="e.g. Get three quotes before you commit"></textarea>
+            <p class="wiz-error" role="alert"></p>
+          </section>
+
+          <!-- Navigation -->
+          <div class="wiz-nav">
+            <button type="button" class="wiz-btn wiz-back" id="wiz-back">← Back</button>
+            <button type="submit" class="wiz-btn wiz-next" id="wiz-next">Next</button>
+          </div>
         </form>
+
+        <!-- Final confirmation screen -->
+        <div class="wiz-card wiz-done" id="wiz-done" hidden>
+          <div class="wiz-done-emoji" aria-hidden="true">🎉</div>
+          <h2 tabindex="-1">Thanks for helping another Kiwi.</h2>
+          <p>Your experience could save somebody time, money and frustration.</p>
+          <button type="button" class="wiz-btn wiz-next" data-nav="home">Return Home</button>
+        </div>
+
+        <p class="wiz-trust">🥝 Real outcomes · Real costs · Real recommendations · Real New Zealand experiences</p>
       </div>
     </section>
   </main>
