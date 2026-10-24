@@ -12,6 +12,8 @@ const REGIONS = ["Northland", "Auckland", "Waikato", "Bay of Plenty", "Gisborne 
 
 // Key used to store user-submitted results in the browser
 const STORAGE_KEY = "rkr-user-results";
+// Provider detail requests made in this browser (list of result ids)
+const REQUEST_KEY = "rkr-provider-requests";
 
 /* ---------- 2. APP STATE ----------
    Variables that remember what the app is currently doing. */
@@ -244,6 +246,27 @@ function renderResults() {
 }
 
 /* ---------- 10. DETAIL SCREEN ---------- */
+function providerHTML(r) {
+  const hasProvider = r.providerName || r.providerType;
+  if (!hasProvider || !r.providerConsent || r.providerConsent === "private") return "";
+  if (r.providerConsent === "public") {
+    return `<h3>Provider</h3>
+      <div class="provider-box">
+        ${r.providerName ? `<p><strong>${escapeHTML(r.providerName)}</strong></p>` : ""}
+        ${r.providerType ? `<p class="muted">${escapeHTML(r.providerType)}</p>` : ""}
+      </div>`;
+  }
+  const requested = JSON.parse(localStorage.getItem(REQUEST_KEY) || "[]").includes(r.id);
+  return `<h3>Provider</h3>
+    <div class="provider-box">
+      <p>The contributor will share provider details on request.</p>
+      ${requested
+        ? '<p class="badge-yes">✓ Request sent</p>'
+        : `<button class="btn btn-ghost" type="button" data-request-provider="${escapeHTML(r.id)}">Request Provider Details</button>`}
+    </div>`;
+}
+
+
 function showDetail(id) {
   const r = allResults.find((item) => item.id === id);
   if (!r) return;
@@ -259,7 +282,8 @@ function showDetail(id) {
         ? '<span class="badge-yes">Yes 👍</span>'
         : '<span class="badge-no">No 👎</span>'}</p>
     <h3>Rating</h3>
-    <p class="stars">${starsText(r.rating)} (${r.rating}/5)</p>`;
+    <p class="stars">${starsText(r.rating)} (${r.rating}/5)</p>
+    ${providerHTML(r)}`;
   showScreen("detail");
 }
 
@@ -277,6 +301,9 @@ function handleSubmit(event) {
     outcome: $("f-outcome").value.trim(),
     recommend: document.querySelector('input[name="recommend"]:checked').value === "yes",
     rating: Number($("f-rating").value),
+    providerName: $("f-provider-name").value.trim(),
+    providerType: $("f-provider-type").value,
+    providerConsent: document.querySelector('input[name="consent"]:checked').value,
     date: new Date().toISOString().slice(0, 10) // e.g. "2026-10-23"
   };
 
@@ -317,6 +344,16 @@ function setupEvents() {
 
   // One listener for the whole page handles all clicks ("event delegation")
   document.addEventListener("click", (e) => {
+    const req = e.target.closest("[data-request-provider]");
+    if (req) {
+      const id = req.dataset.requestProvider;
+      const list = JSON.parse(localStorage.getItem(REQUEST_KEY) || "[]");
+      if (!list.includes(id)) list.push(id);
+      localStorage.setItem(REQUEST_KEY, JSON.stringify(list));
+      showDetail(id);
+      return;
+    }
+
     // Navigation buttons (logo, "Share a result", Back)
     const nav = e.target.closest("[data-nav]");
     if (nav) {

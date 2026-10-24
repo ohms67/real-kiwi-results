@@ -96,18 +96,48 @@
         <h2>Share your result</h2>
         <p class="muted">Help your neighbours: tell us what worked (and what didn't).</p>
         <form id="submit-form" class="form">
-          <label>Region <select id="f-region" required></select></label>
-          <label>Category <select id="f-category" required></select></label>
-          <label>Problem <input id="f-problem" type="text" required></label>
-          <label>Solution taken <textarea id="f-solution" rows="3" required></textarea></label>
-          <label>Cost (NZD) <input id="f-cost" type="number" min="0" step="1" required></label>
-          <label>Result achieved <textarea id="f-outcome" rows="3" required></textarea></label>
-          <fieldset>
-            <legend>Would you recommend it?</legend>
-            <label><input type="radio" name="recommend" value="yes" checked> Yes</label>
-            <label><input type="radio" name="recommend" value="no"> No</label>
+          <fieldset class="form-section">
+            <legend>About your result</legend>
+            <label>Region <select id="f-region" required></select></label>
+            <label>Category <select id="f-category" required></select></label>
+            <label>Problem <input id="f-problem" type="text" required></label>
+            <label>Solution taken <textarea id="f-solution" rows="3" required></textarea></label>
+            <label>Cost (NZD) <input id="f-cost" type="number" min="0" step="1" required></label>
+            <label>Result achieved <textarea id="f-outcome" rows="3" required></textarea></label>
           </fieldset>
-          <label>Rating (1-5) <input id="f-rating" type="number" min="1" max="5" value="5" required></label>
+          <fieldset class="form-section">
+            <legend>Your verdict</legend>
+            <div class="radio-row">
+              <span class="field-label">Would you recommend it?</span>
+              <label class="inline"><input type="radio" name="recommend" value="yes" checked> Yes</label>
+              <label class="inline"><input type="radio" name="recommend" value="no"> No</label>
+            </div>
+            <label>Rating (1-5) <input id="f-rating" type="number" min="1" max="5" value="5" required></label>
+          </fieldset>
+          <fieldset class="form-section">
+            <legend>Provider information <span class="optional">Optional</span></legend>
+            <label>Provider name <input id="f-provider-name" type="text" autocomplete="off" placeholder="e.g. Smith &amp; Sons Roofing"></label>
+            <label>Provider type
+              <select id="f-provider-type">
+                <option value="">Select a type…</option>
+                <option>Tradesperson</option>
+                <option>Business / company</option>
+                <option>Health practitioner</option>
+                <option>Professional (accountant, lawyer…)</option>
+                <option>Government / council</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <div class="consent" role="radiogroup" aria-labelledby="consent-title">
+              <p id="consent-title" class="field-label">How should provider information be handled?</p>
+              <label class="option"><input type="radio" name="consent" value="private" checked>
+                <span><strong>Keep private</strong><small>Only you know the provider. Nothing is shown on your result.</small></span></label>
+              <label class="option"><input type="radio" name="consent" value="public">
+                <span><strong>Show provider publicly</strong><small>The provider's name and type appear on your result for everyone to see.</small></span></label>
+              <label class="option"><input type="radio" name="consent" value="request">
+                <span><strong>Share provider only on request</strong><small>Readers see that a provider exists and can ask for details. Nothing is shown until you agree.</small></span></label>
+            </div>
+          </fieldset>
           <button class="btn btn-primary" type="submit">Submit</button>
         </form>
       </div>
