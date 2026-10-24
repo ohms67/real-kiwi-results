@@ -148,3 +148,33 @@ fieldset label { display: inline-block; margin-right: 1rem; }
 .provider-table { width: 100%; border-collapse: collapse; }
 .provider-table th, .provider-table td { text-align: left; padding: .5rem; border-bottom: 1px solid var(--line); }
 @media (max-width: 600px) { #top-providers { overflow-x: auto; } }
+
+/* ---------- National insights ---------- */
+.main-nav { display: flex; gap: .25rem; }
+.main-nav a { color: var(--muted); text-decoration: none; font-weight: 600; font-size: .92rem;
+  padding: .4rem .8rem; border-radius: 8px; }
+.main-nav a:hover { background: var(--green-50); }
+.main-nav a.active { background: var(--green-100); color: var(--green-700); }
+.insights-hero { background: linear-gradient(120deg, var(--green-900), var(--green-700)); color: #fff;
+  border-radius: var(--radius); padding: 2rem 1.6rem; margin-bottom: 1.5rem; }
+.insights-hero .eyebrow { color: var(--gold); }
+.insights-hero h1 { font-size: clamp(1.6rem, 4.5vw, 2.4rem); font-weight: 800; }
+.hero-sub { opacity: .9; max-width: 60ch; }
+.insight-cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.insight-cols .panel { margin-bottom: 0; }
+.note { margin: -.4rem 0 1rem; }
+.ibars { list-style: none; margin: 0; padding: 0; display: grid; gap: .9rem; }
+.ibars li { display: flex; gap: .7rem; }
+.ib-rank { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--green-100);
+  color: var(--green-700); font-size: .75rem; font-weight: 700; display: grid; place-items: center; margin-top: .1rem; }
+.ib-main { flex: 1; min-width: 0; }
+.ib-top { display: flex; justify-content: space-between; gap: .75rem; font-size: .92rem; }
+.ib-label { font-weight: 500; }
+.ib-track { position: relative; height: 8px; background: var(--green-50); border-radius: 99px; margin: .35rem 0 .2rem; }
+.ib-fill { height: 100%; background: var(--green-700); border-radius: 99px; }
+.ref-line { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--gold); }
+.ib-sub { color: var(--muted); font-size: .78rem; }
+.legend { display: flex; align-items: center; gap: .4rem; margin-top: 1rem; font-size: .8rem; }
+.ref-key { width: 2px; height: 12px; background: var(--gold); display: inline-block; }
+.method { text-align: center; margin-top: 1.5rem; }
+@media (max-width: 800px) { .insight-cols { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: repeat(2, 1fr); } }
