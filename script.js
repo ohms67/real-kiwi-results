@@ -384,6 +384,7 @@ function setupEvents() {
       e.preventDefault();
       const target = nav.dataset.nav;
       if (target === "home") { renderHome(); showScreen("home"); }
+      if (target === "insights") { renderInsights(); showScreen("insights"); window.scrollTo(0, 0); }
       if (target === "submit") { showScreen("submit"); }
       if (target === "back") { showScreen(previousScreen); }
       return;

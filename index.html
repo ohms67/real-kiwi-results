@@ -15,6 +15,7 @@
     <div class="header-inner">
       <a href="#" class="logo" data-nav="home"><span class="logo-mark">🥝</span> Real Kiwi Results</a>
       <span class="trust-pill">🇳🇿 Kiwi-built · Community-powered</span>
+      <button class="btn btn-ghost" data-nav="insights">📊 Insights</button>
       <button class="btn btn-primary" data-nav="submit">Share a result</button>
     </div>
   </header>
@@ -84,6 +85,16 @@
         <div class="panel-head"><h2 id="recent-title">Recent results</h2></div>
         <div id="recent-list" class="card-list"></div>
       </div>
+    </section>
+
+    <!-- Insights dashboard -->
+    <section id="screen-insights" class="screen hidden">
+      <button class="link" data-nav="home">← Dashboard</button>
+      <p class="eyebrow">Insights dashboard</p>
+      <h2>What's working across Aotearoa</h2>
+      <p class="muted">Patterns and successful outcomes from every shared result.</p>
+      <div id="insight-cards" class="stat-grid"></div>
+      <div id="insight-panels"></div>
     </section>
 
     <!-- Results -->
@@ -160,5 +171,6 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="insights.js"></script>
 </body>
 </html>
