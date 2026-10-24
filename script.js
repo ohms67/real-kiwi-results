@@ -185,6 +185,29 @@ function renderTopByRegion() {
   }).join("");
 }
 
+// Only public providers with 3+ recommendations; private/on-request are excluded
+function renderTopProviders() {
+  const groups = {};
+  allResults.forEach((r) => {
+    const name = (r.providerName || "").trim();
+    if (r.providerConsent !== "public" || !name || !r.recommend) return;
+    const key = name.toLowerCase() + "|" + r.region;
+    (groups[key] = groups[key] || { name, region: r.region, list: [] }).list.push(r);
+  });
+  const rows = Object.values(groups)
+    .filter((g) => g.list.length >= 3)
+    .map((g) => ({
+      ...g,
+      avg: g.list.reduce((t, r) => t + r.rating, 0) / g.list.length,
+      success: g.list.filter((r) => r.rating >= 4).length
+    }))
+    .sort((a, b) => b.list.length - a.list.length || b.avg - a.avg);
+  $("top-providers").innerHTML = rows.length
+    ? `<table class="provider-table"><thead><tr><th>Provider</th><th>Region</th><th>Recommendations</th><th>Avg rating</th><th>Successful outcomes</th></tr></thead><tbody>${rows.map((g) =>
+        `<tr><td>${escapeHTML(g.name)}</td><td>${escapeHTML(g.region)}</td><td>${g.list.length}</td><td>${g.avg.toFixed(1)}</td><td>${g.success}</td></tr>`).join("")}</tbody></table>`
+    : "<p class='muted'>No providers have 3 or more public recommendations yet.</p>";
+}
+
 /* ---------- 8b. HOME SCREEN ---------- */
 function renderHome() {
   // Category buttons
@@ -196,6 +219,7 @@ function renderHome() {
   $("region-stats").innerHTML = statCardsHTML(statsFor(allResults.filter(inRegion)), true);
   renderWaikato();
   renderTopByRegion();
+  renderTopProviders();
   $("recent-title").textContent = "Recent results · " + regionLabel();
 
   // Recent results: newest first, first 4
