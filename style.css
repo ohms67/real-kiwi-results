@@ -144,3 +144,7 @@ fieldset label { display: inline-block; margin-right: 1rem; }
   .provider-box .btn { width: 100%; }
   .bar-row { grid-template-columns: 90px 1fr 20px; }
 }
+
+.provider-table { width: 100%; border-collapse: collapse; }
+.provider-table th, .provider-table td { text-align: left; padding: .5rem; border-bottom: 1px solid var(--line); }
+@media (max-width: 600px) { #top-providers { overflow-x: auto; } }
